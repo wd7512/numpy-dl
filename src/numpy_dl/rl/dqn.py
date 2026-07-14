@@ -12,6 +12,8 @@ Mathematical equations:
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 
 from numpy_dl.memory.replay_buffer import ReplayBuffer
@@ -19,6 +21,8 @@ from numpy_dl.nn.activations import ReLU
 from numpy_dl.nn.layers import Dense
 from numpy_dl.nn.sequential import Sequential
 from numpy_dl.rl.utils import epsilon_greedy
+
+logger = logging.getLogger(__name__)
 
 
 class DQNAgent:
@@ -78,9 +82,8 @@ class DQNAgent:
         self.update_target()
 
         self._q_params = self.q_net.parameters()
-        self._optimizer_states = [
-            np.zeros_like(p) for p, _ in self._q_params
-        ]
+        self._optimizer_m = [np.zeros_like(p) for p, _ in self._q_params]
+        self._optimizer_v = [np.ones_like(p) for p, _ in self._q_params]
         self._optimizer_t = 0
 
         self.buffer = ReplayBuffer(buffer_size)
@@ -139,10 +142,10 @@ class DQNAgent:
         bc1 = 1.0 - 0.9**self._optimizer_t
         bc2 = 1.0 - 0.999**self._optimizer_t
         for i, (param, _grad) in enumerate(self._q_params):
-            self._optimizer_states[i] = 0.9 * self._optimizer_states[i] + 0.1 * _grad
-            v = 0.999 * np.ones_like(_grad) + 0.001 * _grad**2
-            m_hat = self._optimizer_states[i] / bc1
-            v_hat = v / bc2
+            self._optimizer_m[i] = 0.9 * self._optimizer_m[i] + 0.1 * _grad
+            self._optimizer_v[i] = 0.999 * self._optimizer_v[i] + 0.001 * _grad**2
+            m_hat = self._optimizer_m[i] / bc1
+            v_hat = self._optimizer_v[i] / bc2
             param -= 1e-3 * m_hat / (np.sqrt(np.abs(v_hat)) + 1e-8)
 
         return float(loss)
@@ -151,12 +154,13 @@ class DQNAgent:
         """Copy q_net weights to target_net."""
         self._sync_target()
 
-    def train(self, env: object, episodes: int = 500) -> list[float]:
-        """Full training loop on an environment with reset()/step() interface.
+    def train(self, env: object, episodes: int = 1000, max_steps: int = 10000) -> list[float]:
+        """Run the full DQN training loop.
 
         Args:
             env: Environment with reset() -> state and step(action) -> (state, reward, done, info).
             episodes: Number of episodes to train.
+            max_steps: Maximum steps per episode to prevent infinite loops.
 
         Returns:
             List of total rewards per episode.
@@ -166,7 +170,9 @@ class DQNAgent:
             state = env.reset()
             total = 0.0
             done = False
-            while not done:
+            steps = 0
+            while not done and steps < max_steps:
+                steps += 1
                 action = self.select_action(state)
                 result = env.step(action)
                 if len(result) == 4:
@@ -174,7 +180,10 @@ class DQNAgent:
                 else:
                     next_state, reward, done = result
                 self.store_transition(state, action, reward, next_state, done)
-                self.train_step()
+                loss = self.train_step()
+                if np.isnan(loss) or np.isinf(loss):
+                    logger.warning("NaN/inf loss detected at episode %d, step; breaking", ep)
+                    break
                 state = next_state
                 total += reward
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)

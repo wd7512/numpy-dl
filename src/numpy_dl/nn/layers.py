@@ -56,6 +56,9 @@ class Dense(Layer):
         self._input: np.ndarray | None = None
         self.dW: np.ndarray = np.zeros_like(self.W)
         self.db: np.ndarray = np.zeros_like(self.b)
+        self._cached_params: list[tuple[np.ndarray, np.ndarray]] = [
+            (self.W, self.dW), (self.b, self.db)
+        ]
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """Compute y = x @ W + b and cache input for backward.
@@ -65,7 +68,16 @@ class Dense(Layer):
 
         Returns:
             Output of shape (batch, out_features).
+
+        Raises:
+            ValueError: If input dimensions don't match layer specs.
         """
+        if x.ndim != 2:
+            raise ValueError(f"Dense expects 2D input (batch, in_features), got {x.ndim}D")
+        if x.shape[1] != self.W.shape[0]:
+            raise ValueError(
+                f"Input features {x.shape[1]} != layer in_features {self.W.shape[0]}"
+            )
         self._input = x
         return x @ self.W + self.b
 
@@ -77,11 +89,16 @@ class Dense(Layer):
 
         Returns:
             Gradient w.r.t. input: dL/dx = grad @ W^T.
+
+        Raises:
+            RuntimeError: If called before forward().
         """
+        if self._input is None:
+            raise RuntimeError("Dense.backward() called before forward()")
         self.dW[:] = self._input.T @ grad
         self.db[:] = np.sum(grad, axis=0, keepdims=True)
         return grad @ self.W.T
 
     def parameters(self) -> list[tuple[np.ndarray, np.ndarray]]:
         """Return [(W, dW), (b, db)] for the optimizer."""
-        return [(self.W, self.dW), (self.b, self.db)]
+        return self._cached_params

@@ -11,6 +11,8 @@ Mathematical equations:
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 
 from numpy_dl.nn.activations import ReLU, softmax
@@ -18,6 +20,8 @@ from numpy_dl.nn.layers import Dense
 from numpy_dl.nn.sequential import Sequential
 from numpy_dl.optim.adam import Adam
 from numpy_dl.rl.utils import categorical_sample, normalize_advantages
+
+logger = logging.getLogger(__name__)
 
 
 class REINFORCEAgent:
@@ -81,7 +85,6 @@ class REINFORCEAgent:
         self,
         state: np.ndarray,
         action: int,
-        log_prob: float,
         reward: float,
     ) -> None:
         """Store a transition from the current episode.
@@ -89,8 +92,6 @@ class REINFORCEAgent:
         Args:
             state: State at which the action was taken.
             action: Action taken.
-            log_prob: Log probability of the action (stored for API
-                compatibility; recomputed during train_step).
             reward: Reward received after taking the action.
         """
         self._states.append(state.copy())
@@ -146,32 +147,39 @@ class REINFORCEAgent:
         self._rewards.clear()
         return avg_return
 
-    def train(self, env: object, episodes: int = 500) -> list[float]:
-        """Full training loop on an environment.
+    def train(
+        self, env: object, episodes: int = 500, max_steps: int = 10000
+    ) -> list[float]:
+        """Run the full REINFORCE training loop.
 
         Args:
-            env: Environment with reset() -> state and
-                step(action) -> (state, reward, done, info).
+            env: Environment with reset() -> state and step(action) -> (state, reward, done, info).
             episodes: Number of episodes to train.
+            max_steps: Maximum steps per episode to prevent infinite loops.
 
         Returns:
             List of total rewards per episode.
         """
         rewards: list[float] = []
-        for _ in range(episodes):
+        for ep in range(episodes):
             state = env.reset()
-            total = 0.0
             done = False
-            while not done:
+            total = 0.0
+            steps = 0
+            while not done and steps < max_steps:
+                steps += 1
                 action = self.select_action(state)
                 result = env.step(action)
                 if len(result) == 4:
                     next_state, reward, done, _info = result
                 else:
                     next_state, reward, done = result
-                self.store_transition(state, action, 0.0, reward)
+                self.store_transition(state, action, reward)
                 state = next_state
                 total += reward
-            self.train_step()
+            avg_return = self.train_step()
+            if np.isnan(avg_return) or np.isinf(avg_return):
+                logger.warning("NaN/inf return detected at episode %d; breaking", ep)
+                break
             rewards.append(total)
         return rewards

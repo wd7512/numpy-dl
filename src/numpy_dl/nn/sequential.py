@@ -11,6 +11,7 @@ Mathematical equations:
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 
 import numpy as np
@@ -18,7 +19,7 @@ import numpy as np
 from numpy_dl.nn.layers import Layer
 
 
-class Sequential(Layer):
+class Sequential:
     """A linear stack of layers.
 
     Forward pass chains layers in order; backward pass reverses them.
@@ -27,6 +28,10 @@ class Sequential(Layer):
 
     def __init__(self, layers: Sequence[Layer]) -> None:
         self._layers = list(layers)
+        if not self._layers:
+            logging.getLogger(__name__).warning(
+                "Sequential created with no layers — forward/backward are no-ops"
+            )
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         for layer in self._layers:

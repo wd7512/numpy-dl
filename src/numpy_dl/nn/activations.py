@@ -47,7 +47,12 @@ class ReLU:
 
         Returns:
             Gradient masked by the forward mask (x > 0).
+
+        Raises:
+            RuntimeError: If called before forward().
         """
+        if self._input is None:
+            raise RuntimeError("ReLU.backward() called before forward()")
         return grad * (self._input > 0).astype(grad.dtype)
 
 
@@ -80,8 +85,13 @@ class Sigmoid:
             grad: Upstream gradient.
 
         Returns:
-            Gradient scaled by σ(x) * (1 - σ(x)).
+            Gradient: grad * σ(x) * (1 - σ(x)).
+
+        Raises:
+            RuntimeError: If called before forward().
         """
+        if self._output is None:
+            raise RuntimeError("Sigmoid.backward() called before forward()")
         return grad * self._output * (1.0 - self._output)
 
 
