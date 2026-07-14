@@ -32,6 +32,9 @@ htmlcov/
 .idea/
 *.swp
 
+# OpenCode
+.opencode/
+
 # OS
 .DS_Store
 
