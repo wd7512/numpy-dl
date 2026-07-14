@@ -67,7 +67,7 @@ class TestREINFORCETrainStep:
     def test_no_error_with_data(self) -> None:
         agent = REINFORCEAgent(state_dim=4, action_dim=2, seed=0)
         for _ in range(10):
-            agent.store_transition(np.random.randn(4), 0, 0.0, 1.0)
+            agent.store_transition(np.random.randn(4), 0, 1.0)
         avg_return = agent.train_step()
         assert isinstance(avg_return, float)
 
@@ -80,7 +80,7 @@ class TestREINFORCETrainStep:
         agent = REINFORCEAgent(state_dim=4, action_dim=2, seed=0)
         weights_before = [p.copy() for p, _ in agent.policy_net.parameters()]
         for _ in range(10):
-            agent.store_transition(np.random.randn(4), 0, 0.0, 1.0)
+            agent.store_transition(np.random.randn(4), 0, 1.0)
         agent.train_step()
         weights_after = [p.copy() for p, _ in agent.policy_net.parameters()]
         changed = any(
@@ -91,7 +91,7 @@ class TestREINFORCETrainStep:
     def test_trajectory_cleared_after_train(self) -> None:
         agent = REINFORCEAgent(state_dim=4, action_dim=2, seed=0)
         for _ in range(5):
-            agent.store_transition(np.random.randn(4), 1, 0.0, 1.0)
+            agent.store_transition(np.random.randn(4), 1, 1.0)
         agent.train_step()
         assert len(agent._rewards) == 0
         assert len(agent._states) == 0

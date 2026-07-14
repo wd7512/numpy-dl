@@ -38,11 +38,26 @@ class ReplayBuffer:
         next_state: np.ndarray,
         done: bool,
     ) -> None:
-        """Store a transition in the buffer."""
+        """Store a transition in the buffer.
+
+        Args:
+            state: Current state.
+            action: Action taken.
+            reward: Reward received.
+            next_state: Next state.
+            done: Whether episode ended.
+        """
+        transition = (
+            np.array(state),
+            int(action),
+            float(reward),
+            np.array(next_state),
+            bool(done),
+        )
         if len(self._buffer) < self._capacity:
-            self._buffer.append((state, action, reward, next_state, done))
+            self._buffer.append(transition)
         else:
-            self._buffer[self._pos] = (state, action, reward, next_state, done)
+            self._buffer[self._pos] = transition
         self._pos = (self._pos + 1) % self._capacity
 
     def sample(
@@ -51,11 +66,11 @@ class ReplayBuffer:
         """Sample a batch of transitions uniformly at random.
 
         Returns:
-            states:   (batch_size, state_dim)
-            actions:  (batch_size,)
-            rewards:  (batch_size,)
-            dones:    (batch_size,)
+            states:      (batch_size, state_dim)
+            actions:     (batch_size,)
+            rewards:     (batch_size,)
             next_states: (batch_size, state_dim)
+            dones:       (batch_size,)
         """
         indices = np.random.choice(len(self._buffer), size=batch_size, replace=False)
         batch = [self._buffer[i] for i in indices]

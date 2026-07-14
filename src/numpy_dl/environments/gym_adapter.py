@@ -31,10 +31,10 @@ class GymAdapter:
         """Reset the environment and return the observation as a numpy array."""
         result = self._env.reset()
         if isinstance(result, tuple):
-            state = result[0]
+            obs = result[0]
         else:
-            state = result
-        return np.asarray(state, dtype=np.float64)
+            obs = result
+        return np.asarray(obs)
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
         """Step the environment.
@@ -42,6 +42,5 @@ class GymAdapter:
         Returns:
             (state, reward, done, info) where done = terminated or truncated.
         """
-        state, reward, terminated, truncated, info = self._env.step(action)
-        done = terminated or truncated
-        return np.asarray(state, dtype=np.float64), float(reward), done, info
+        obs, reward, terminated, truncated, _ = self._env.step(action)
+        return np.asarray(obs), float(reward), terminated or truncated, {}

@@ -266,13 +266,14 @@ class PPOAgent:
 
         return avg_reward
 
-    def train(self, env: object, episodes: int = 500) -> list[float]:
+    def train(self, env: object, episodes: int = 500, max_steps: int = 10000) -> list[float]:
         """Full training loop on an environment.
 
         Args:
             env: Environment with reset() -> state and
                 step(action) -> (state, reward, done, info).
             episodes: Number of episodes to train.
+            max_steps: Maximum steps per episode to prevent infinite loops.
 
         Returns:
             List of total rewards per episode.
@@ -282,7 +283,9 @@ class PPOAgent:
             state = env.reset()
             total = 0.0
             done = False
-            while not done:
+            steps = 0
+            while not done and steps < max_steps:
+                steps += 1
                 action, log_prob, value = self.select_action(state)
                 result = env.step(action)
                 if len(result) == 4:

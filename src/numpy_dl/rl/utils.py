@@ -19,7 +19,11 @@ Mathematical equations:
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def epsilon_greedy(q_values: np.ndarray, epsilon: float, rng: np.random.RandomState) -> int:
@@ -63,6 +67,7 @@ def normalize_advantages(advantages: np.ndarray) -> np.ndarray:
     mean = np.mean(advantages)
     std = np.std(advantages)
     if std < 1e-8:
+        logger.warning("Advantage std near zero (%.2e), skipping normalization", std)
         return advantages - mean
     return (advantages - mean) / std
 

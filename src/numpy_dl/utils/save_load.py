@@ -57,12 +57,30 @@ def load_weights(model: Dense | list[Layer], path: str | Path) -> None:
     Args:
         model: A Dense layer or list of layers.
         path: File path to load from (will add .npz if missing).
+
+    Raises:
+        FileNotFoundError: If the weights file does not exist.
+        KeyError: If required weight keys are missing from the file.
+        ValueError: If weight shapes don't match the model.
     """
     p = Path(path)
     if p.suffix != ".npz":
         p = p.with_suffix(".npz")
-    data = np.load(p)
+    if not p.exists():
+        raise FileNotFoundError(f"Weights file not found: {p}")
+    try:
+        data = np.load(p)
+    except Exception as e:
+        raise ValueError(f"Failed to load weights from {p}: {e}") from e
     layers = _collect_layers(model)
     for idx, layer in enumerate(layers):
-        layer.W[:] = data[f"layer_{idx}_W"]
-        layer.b[:] = data[f"layer_{idx}_b"]
+        w_key = f"layer_{idx}_W"
+        b_key = f"layer_{idx}_b"
+        if w_key not in data:
+            raise KeyError(f"Missing key {w_key!r} in weights file. Available: {list(data.keys())}")
+        if data[w_key].shape != layer.W.shape:
+            raise ValueError(
+                f"Shape mismatch for {w_key}: file {data[w_key].shape} != model {layer.W.shape}"
+            )
+        layer.W[:] = data[w_key]
+        layer.b[:] = data[b_key]
