@@ -44,6 +44,10 @@ dev = [
     "pytest>=7.0",
     "ruff>=0.4",
 ]
+validation = [
+    "torch>=2.0",
+    "tensorflow>=2.13",
+]
 
 [project.urls]
 Homepage = "https://github.com/wd7512/numpy-dl"
@@ -53,6 +57,10 @@ Issues = "https://github.com/wd7512/numpy-dl/issues"
 dev = [
     "pytest>=7.0",
     "ruff>=0.4",
+]
+validation = [
+    "torch>=2.0",
+    "tensorflow>=2.13",
 ]
 
 [tool.hatch.build.targets.wheel]
