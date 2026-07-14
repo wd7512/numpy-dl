@@ -8,4 +8,4 @@ import numpy_dl
 
 
 def test_package_importable():
-    assert numpy_dl.__version__ == "0.0.1"
+    assert numpy_dl.__version__ == "0.6.0"
