@@ -46,7 +46,6 @@ dev = [
 ]
 validation = [
     "torch>=2.0",
-    "tensorflow>=2.13",
 ]
 
 [project.urls]
@@ -60,7 +59,6 @@ dev = [
 ]
 validation = [
     "torch>=2.0",
-    "tensorflow>=2.13",
 ]
 
 [tool.hatch.build.targets.wheel]
