@@ -1,28 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "python-template"
-version = "0.1.0"
-description = "A minimal Python project template with uv, ruff, pytest, and optional agent support."
+name = "numpy-dl"
+version = "0.0.1"
+description = "A lightweight deep learning and reinforcement learning toolkit implemented from scratch using only NumPy."
 readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
 authors = [
-    { name = "William Dennis", email = "wwdennis.home@gmail.com" }
+    { name = "Will" }
 ]
-requires-python = ">=3.11"
-dependencies = []
+keywords = [
+    "numpy",
+    "deep-learning",
+    "reinforcement-learning",
+    "neural-network",
+    "dqn",
+    "reinforce",
+    "ppo",
+    "from-scratch",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/wd7512/numpy-dl"
+Issues = "https://github.com/wd7512/numpy-dl/issues"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.4.0,<10",
-    "ruff>=0.14.10,<0.15",
-    "ty>=0.0.42,<0.1",
+    "pytest>=7.0",
+    "ruff>=0.4",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/numpy_dl"]
+
 [tool.ruff]
-line-length = 88
-target-version = "py311"
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[build-system]
-requires = ["uv_build>=0.9.17,<0.10.0"]
-build-backend = "uv_build"
