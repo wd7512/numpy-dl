@@ -36,7 +36,12 @@ def epsilon_greedy(q_values: np.ndarray, epsilon: float, rng: np.random.RandomSt
 
     Returns:
         Selected action index.
+
+    Raises:
+        ValueError: If `q_values` is empty.
     """
+    if q_values.size == 0:
+        raise ValueError("epsilon_greedy: q_values must not be empty")
     if rng.random() < epsilon:
         return int(rng.randint(0, len(q_values)))
     return int(np.argmax(q_values))
@@ -51,7 +56,12 @@ def categorical_sample(probs: np.ndarray, rng: np.random.RandomState) -> int:
 
     Returns:
         Sampled action index.
+
+    Raises:
+        ValueError: If `probs` is empty.
     """
+    if probs.size == 0:
+        raise ValueError("categorical_sample: probs must not be empty")
     return int(rng.choice(len(probs), p=probs))
 
 

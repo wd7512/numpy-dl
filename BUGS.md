@@ -11,7 +11,9 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
   guard pattern in `dqn.py`/`reinforce.py`. Test added: `tests/rl/test_ppo.py::
   TestPPOTrainStep::test_nan_inf_guard_aborts_training`. *(rl/ppo.py)*
 - **`epsilon_greedy` crashes on empty `q_values`** with an unhelpful numpy error
-  instead of a clear one. Untested. *(rl/utils.py)*
+  instead of a clear one. Untested. *(rl/utils.py)* FIXED 2026-07-22: both
+  `epsilon_greedy` and `categorical_sample` now raise `ValueError` with a clear
+  message on empty input; tests added.
 - **No numerical gradient checking anywhere.** Every backward pass is hand-derived and
   none are checked against finite differences, including PPO's clipped surrogate — the
   hardest one to get right by hand. `tests/rl/test_ppo.py::TestPPOClippedObjective`

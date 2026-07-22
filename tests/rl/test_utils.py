@@ -1,6 +1,7 @@
 """Tests for rl utility functions."""
 
 import numpy as np
+import pytest
 
 from numpy_dl.rl.utils import (
     categorical_sample,
@@ -23,6 +24,11 @@ class TestEpsilonGreedy:
         actions = {epsilon_greedy(q, 1.0, rng) for _ in range(100)}
         assert actions == {0, 1}
 
+    def test_empty_q_values_raises_clear_error(self) -> None:
+        rng = np.random.RandomState(0)
+        with pytest.raises(ValueError, match="epsilon_greedy: q_values must not be empty"):
+            epsilon_greedy(np.array([]), 0.5, rng)
+
 
 class TestCategoricalSample:
     def test_returns_valid_action(self) -> None:
@@ -36,6 +42,11 @@ class TestCategoricalSample:
         probs = np.array([0.0, 0.0, 1.0])
         for _ in range(20):
             assert categorical_sample(probs, rng) == 2
+
+    def test_empty_probs_raises_clear_error(self) -> None:
+        rng = np.random.RandomState(0)
+        with pytest.raises(ValueError, match="categorical_sample: probs must not be empty"):
+            categorical_sample(np.array([]), rng)
 
 
 class TestNormalizeAdvantages:
