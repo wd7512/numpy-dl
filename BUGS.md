@@ -27,7 +27,10 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
   already caches, so this is just an inconsistency, not a functional bug.
 - **`he_init`/`xavier_init` use the global `np.random.randn`**, not an injectable RNG,
   so they aren't reproducible independent of global numpy state.
-- **`requires-python` is still `>=3.9`**; 3.9 is EOL.
+- **`requires-python` is still `>=3.9`**; 3.9 is EOL. FIXED 2026-07-22: bumped to
+  `>=3.10` (pyproject.toml), dropped the 3.9 classifier, raised ruff `target-version`
+  to `py310`, repinned `.python-version` to 3.11, fixed the resulting `typing.Callable`
+  → `collections.abc.Callable` UP035 finding in `nn/layers.py`.
 - **FrozenLake example never reaches the goal.** `examples/frozen_lake_q_learning.py`
   ships `epsilon=0.1`, no epsilon decay, 2000 episodes on the slippery 4x4 map.
   Verified 2026-07-22: 0 of 2000 episodes reach the goal. The example runs without
