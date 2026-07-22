@@ -24,7 +24,8 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
 - **`_compute_returns()` in `reinforce.py`** is an unvectorized Python loop. (The GAE
   loop in `rl/utils.py` is intentionally sequential and fine as-is.)
 - **`Sequential.parameters()` rebuilds its list on every call**; `Dense.parameters()`
-  already caches, so this is just an inconsistency, not a functional bug.
+  already caches, so this is just an inconsistency, not a functional bug. FIXED
+  2026-07-22: now builds `self._cached_params` once in `__init__` and returns it, mirroring `Dense`'s pattern. Tests added in `tests/nn/test_sequential.py`.
 - **`he_init`/`xavier_init` use the global `np.random.randn`**, not an injectable RNG,
   so they aren't reproducible independent of global numpy state.
 - **`requires-python` is still `>=3.9`**; 3.9 is EOL. FIXED 2026-07-22: bumped to

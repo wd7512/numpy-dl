@@ -32,6 +32,10 @@ class Sequential:
             logging.getLogger(__name__).warning(
                 "Sequential created with no layers — forward/backward are no-ops"
             )
+        self._cached_params: list[tuple[np.ndarray, np.ndarray]] = [
+            p for layer in self._layers if hasattr(layer, "parameters")
+            for p in layer.parameters()
+        ]
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         for layer in self._layers:
@@ -44,8 +48,4 @@ class Sequential:
         return grad
 
     def parameters(self) -> list[tuple[np.ndarray, np.ndarray]]:
-        params: list[tuple[np.ndarray, np.ndarray]] = []
-        for layer in self._layers:
-            if hasattr(layer, "parameters"):
-                params.extend(layer.parameters())
-        return params
+        return self._cached_params
