@@ -5,7 +5,7 @@ toolkit implemented from scratch using only NumPy.
 
 ## Commands
 
-- Install dependencies: `uv sync --dev`
+- Install dependencies: `uv sync --extra dev`
 - Lint: `uv run ruff check`
 - Test: `uv run pytest`
 - Build: `uv build`
