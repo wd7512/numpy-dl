@@ -1,21 +1,24 @@
 """Integration test: train XOR to convergence using Adam optimizer."""
 
+import functools
+
 import numpy as np
 
 from numpy_dl.nn.activations import ReLU
 from numpy_dl.nn.layers import Dense
 from numpy_dl.nn.losses import mse_loss
 from numpy_dl.optim.adam import Adam
+from numpy_dl.utils.init import he_init
 
 
 def test_xor_converges_with_adam() -> None:
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=np.float64)
     y = np.array([[0], [1], [1], [0]], dtype=np.float64)
 
-    np.random.seed(0)
-    dense1 = Dense(2, 4)
+    init_rng = np.random.RandomState(0)
+    dense1 = Dense(2, 4, weight_init=functools.partial(he_init, rng=init_rng))
     relu = ReLU()
-    dense2 = Dense(4, 1)
+    dense2 = Dense(4, 1, weight_init=functools.partial(he_init, rng=init_rng))
     params = dense1.parameters() + dense2.parameters()
     optimizer = Adam(params, lr=0.01)
 

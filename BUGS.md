@@ -27,7 +27,13 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
   already caches, so this is just an inconsistency, not a functional bug. FIXED
   2026-07-22: now builds `self._cached_params` once in `__init__` and returns it, mirroring `Dense`'s pattern. Tests added in `tests/nn/test_sequential.py`.
 - **`he_init`/`xavier_init` use the global `np.random.randn`**, not an injectable RNG,
-  so they aren't reproducible independent of global numpy state.
+  so they aren't reproducible independent of global numpy state. FIXED 2026-07-22:
+  both accept an optional `rng: np.random.RandomState`; when None, they draw from
+  a module-private RandomState instead of global `np.random`. Users inject an RNG
+  via `functools.partial(he_init, rng=my_rng)`. The two XOR integration tests that
+  relied on `np.random.seed(0)` were updated to inject a `RandomState(0)` directly.
+  New `tests/nn/test_init.py` covers reproducibility, divergence, scale, and the
+  Dense-with-injected-RNG path.
 - **`requires-python` is still `>=3.9`**; 3.9 is EOL. FIXED 2026-07-22: bumped to
   `>=3.10` (pyproject.toml), dropped the 3.9 classifier, raised ruff `target-version`
   to `py310`, repinned `.python-version` to 3.11, fixed the resulting `typing.Callable`
