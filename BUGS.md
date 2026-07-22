@@ -18,7 +18,14 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
   none are checked against finite differences, including PPO's clipped surrogate — the
   hardest one to get right by hand. `tests/rl/test_ppo.py::TestPPOClippedObjective`
   only checks the scalar min-of-surrogates formula, not the actual gradient computed in
-  `train_step`.
+  `train_step`. FIXED 2026-07-22: added `numpy_dl/nn/gradcheck.py` with
+  `check_layer_gradients(layer, x, dy)` (verifies a Layer's `backward` against
+  central-difference FD on its parameters and input) and
+  `check_function_gradients(f, x, df)` (verifies an arbitrary callable's Jacobian).
+  New `tests/rl/test_gradients.py` covers Dense / ReLU / Sigmoid backward passes,
+  REINFORCE's policy gradient, and the PPO clipped surrogate (with and without the
+  entropy bonus term). Running these tests immediately surfaced a real bug in the
+  PPO entropy-bonus gradient — see below — which has also been fixed.
 - **`ReplayBuffer` is list-of-tuples**, not preallocated arrays. Works, but sampling
   and storage both do more Python-level work than necessary. FIXED 2026-07-22:
   rewrote to lazily preallocate one NumPy array per field (`_states`,
@@ -64,12 +71,42 @@ near-zero warning, empty-`Sequential` warning.
 
 ## Checked and NOT a bug
 
-The PPO clip mask (`is_unclipped = unclipped <= clipped`) was suspected of being a
-sign/masking error. Verified against the textbook clip-gradient rule across 100k random
-`(ratio, advantage)` pairs (zero mismatches) and against finite differences on a real
-trajectory (mean relative error 0.8%, max 4.7%, consistent with FD step size). The
-gradient is correct — flagged above only because nothing in the test suite would catch
-a regression here.
+### PPO clip mask (`is_unclipped = unclipped <= clipped`)
+
+The clip *mask itself* was suspected of being a sign/masking error. Verified
+against the textbook clip-gradient rule across 100k random `(ratio,
+advantage)` pairs (zero mismatches). The mask is correct.
+
+The original "verified against finite differences" claim here was
+over-confident, however: the same FD run reported `mean relative error 0.8%,
+max 4.7%` on a real trajectory. That 4.7% was NOT FD step-size noise — it was
+a real gradient bug in the **entropy bonus term** (see the Open entry below).
+The surrogate/clipped-objective portion of the actor gradient IS correct.
+
+## Open (newly surfaced, not in the original BUGS.md list)
+
+- **PPO entropy-bonus gradient uses scalar `mean_entropy` in place of the
+  per-row `H_t` the derivative actually requires.**
+  The correct `dL/dlogits[t, k]` for `L = -(surrogate + ent_coeff * sum_t
+  H_t)` requires `+ent_coeff * p_{t,k} * (log p_{t,k} + H_t)` per row `t`,
+  where `H_t = -sum_a p_{t,a} * log p_{t,a}` is the per-sample entropy of
+  shape `(B,)`. The code mistakenly used `probs * (log_probs + mean_entropy)`
+  where `mean_entropy = mean_t H_t` is a scalar broadcast across the batch,
+  mixing entropy values across rows. The previously-listed "4.7% max
+  relative error consistent with FD step size" was actually this bug — once
+  the surrogate term is checked alone (entropy_coeff=0) FD error is 1e-8;
+  turning entropy back on brings the 5e-3 absolute / 1.5 max relative error
+  back. FIXED 2026-07-22 in `rl/ppo.py`: replaced `mean_entropy` (scalar)
+  with `entropy[:, np.newaxis]` (per-row vector). Regression tests in
+  `tests/rl/test_gradients.py`:
+  - `TestPPOClippedSurrogateGradient::test_code_form_mismatches_fd_with_entropy`
+    reflects the buggy form and asserts it fails FD (max_abs_error > 1e-3).
+  - `TestPPOClippedSurrogateGradient::test_correct_form_matches_fd_with_entropy`
+    asserts the now-in-code per-row form matches FD to ~1e-8.
+
+  The `Is NOT a bug` conclusion recorded above about the **clip mask**
+  remains correct — only the entropy-bonus derivative was wrong, and only
+  that line is changed.
 
 ## Secondary / deferred (not bugs, tracked for v1.0.0)
 

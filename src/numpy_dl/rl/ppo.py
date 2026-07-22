@@ -246,7 +246,10 @@ class PPOAgent:
                 is_unclipped = (unclipped <= clipped).astype(np.float64)
 
                 entropy = -np.sum(probs * log_probs, axis=-1)
-                mean_entropy = float(np.mean(entropy))
+                # Per-row entropy H_t (shape (B,)) is required by the
+                # softmax-CE-style derivative dH_t/dlogits[t,k] = -p[t,k] * (log p[t,k] + H_t).
+                # Previously this used scalar mean_entropy, which FD showed does not match
+                # the actual derivative (see tests/rl/test_gradients.py and BUGS.md).
 
                 surrogate_grad = (
                     -batch_advantages[:, np.newaxis]
@@ -257,7 +260,7 @@ class PPOAgent:
                 entropy_grad = (
                     self.entropy_coeff
                     * probs
-                    * (log_probs + mean_entropy)
+                    * (log_probs + entropy[:, np.newaxis])
                 )
                 actor_grad = surrogate_grad + entropy_grad
 
