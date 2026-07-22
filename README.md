@@ -289,7 +289,14 @@ numpy-dl/
 │       └── environments/
 │
 ├── examples/
+│   ├── 01_nn_core/        # xor_sgd.py, xor_adam.py
+│   ├── 02_tabular_rl/     # gridworld_q_learning.py, frozen_lake_q_learning.py
+│   ├── 03_deep_rl/        # dqn_cartpole.py, reinforce_cartpole.py
+│   └── 04_ppo/            # ppo_cartpole.py, ppo_lunar_lander.py
 ├── tests/
+│   ├── unit/              # nn, optim, rl, memory, environments unit tests
+│   ├── integration/       # end-to-end training (XOR with SGD / Adam)
+│   └── validation/        # opt-in PyTorch comparison (pip install .[validation])
 └── docs/
 ```
 
@@ -326,7 +333,7 @@ The project is developed with [uv](https://docs.astral.sh/uv/) rather than calli
 ```bash
 git clone https://github.com/wd7512/numpy-dl.git
 cd numpy-dl
-uv sync --group dev
+uv sync --extra dev
 ```
 
 `uv sync` creates a `.venv`, installs the package in editable mode, and installs dev dependencies (`pytest`, `ruff`) — all pinned by `uv.lock` for reproducibility. There's no need to manually create or activate a virtual environment; prefix commands with `uv run` instead:
@@ -334,7 +341,7 @@ uv sync --group dev
 ```bash
 uv run pytest
 uv run ruff check .
-uv run python examples/some_example.py
+uv run python examples/01_nn_core/xor_sgd.py
 ```
 
 Build backend is `hatchling` via `pyproject.toml`.

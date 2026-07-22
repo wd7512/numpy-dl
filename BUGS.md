@@ -54,13 +54,13 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
   `>=3.10` (pyproject.toml), dropped the 3.9 classifier, raised ruff `target-version`
   to `py310`, repinned `.python-version` to 3.11, fixed the resulting `typing.Callable`
   → `collections.abc.Callable` UP035 finding in `nn/layers.py`.
-- **FrozenLake example never reaches the goal.** `examples/frozen_lake_q_learning.py`
+- **FrozenLake example never reaches the goal.** `examples/02_tabular_rl/frozen_lake_q_learning.py`
   ships `epsilon=0.1`, no epsilon decay, 2000 episodes on the slippery 4x4 map.
   Verified 2026-07-22: 0 of 2000 episodes reach the goal. The example runs without
   error and illustrates the q-learning update, but would need higher `episodes`,
   epsilon decay, or `is_slippery=False` before it shows actual learning. The
   example file now carries an honest note rather than silently using different
-  hyperparameters to make the plot look good. *(examples/frozen_lake_q_learning.py)*
+  hyperparameters to make the plot look good. *(examples/02_tabular_rl/frozen_lake_q_learning.py)*
 
 ## Verified fixed (no longer tracked)
 
