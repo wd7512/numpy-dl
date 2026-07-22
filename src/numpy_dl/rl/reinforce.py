@@ -104,13 +104,17 @@ class REINFORCEAgent:
         Returns:
             Array of shape (T,) with discounted return per timestep.
         """
-        T = len(self._rewards)
-        returns = np.zeros(T)
-        G = 0.0
-        for t in reversed(range(T)):
-            G = self._rewards[t] + self.gamma * G
-            returns[t] = G
-        return returns
+        rewards = np.asarray(self._rewards, dtype=np.float64)
+        T = rewards.shape[0]
+        # Discount factor between timestep t and every later timestep k>=t:
+        # D[t, k] = gamma^(k-t), else 0. Returns = D @ rewards.
+        powers = np.arange(T)
+        discount = np.where(
+            powers[None, :] >= powers[:, None],
+            self.gamma ** (powers[None, :] - powers[:, None]),
+            0.0,
+        )
+        return discount @ rewards
 
     def train_step(self) -> float:
         """Compute policy gradient and update network parameters.

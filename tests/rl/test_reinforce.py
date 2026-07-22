@@ -113,3 +113,16 @@ class TestREINFORCEComputeReturns:
         # G_1 = 2.0 + 0.5 * 3.0 = 3.5
         # G_0 = 1.0 + 0.5 * 3.5 = 2.75
         np.testing.assert_allclose(returns, [2.75, 3.5, 3.0])
+
+    def test_matches_naive_loop_on_random_rewards(self) -> None:
+        rng = np.random.RandomState(0)
+        rewards = rng.randn(25).tolist()
+        gamma = 0.97
+        naive = np.zeros(len(rewards))
+        G = 0.0
+        for t in reversed(range(len(rewards))):
+            G = rewards[t] + gamma * G
+            naive[t] = G
+        agent = REINFORCEAgent(state_dim=2, action_dim=2, gamma=gamma, seed=0)
+        agent._rewards = rewards
+        np.testing.assert_allclose(agent._compute_returns(), naive)

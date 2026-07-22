@@ -22,7 +22,11 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
 - **`ReplayBuffer` is list-of-tuples**, not preallocated arrays. Works, but sampling
   and storage both do more Python-level work than necessary.
 - **`_compute_returns()` in `reinforce.py`** is an unvectorized Python loop. (The GAE
-  loop in `rl/utils.py` is intentionally sequential and fine as-is.)
+  loop in `rl/utils.py` is intentionally sequential and fine as-is.) FIXED
+  2026-07-22: replaced with a vectorized `discount @ rewards` matmul, where
+  `discount[t,k] = gamma^(k-t)` for `k>=t` and 0 elsewhere. The GAE loop in
+  `rl/utils.py` remains sequential (correct per BUGS.md note). Test added:
+  `tests/rl/test_reinforce.py::TestREINFORCEComputeReturns::test_matches_naive_loop_on_random_rewards`.
 - **`Sequential.parameters()` rebuilds its list on every call**; `Dense.parameters()`
   already caches, so this is just an inconsistency, not a functional bug. FIXED
   2026-07-22: now builds `self._cached_params` once in `__init__` and returns it, mirroring `Dense`'s pattern. Tests added in `tests/nn/test_sequential.py`.
