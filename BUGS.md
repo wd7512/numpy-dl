@@ -25,6 +25,13 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
 - **`he_init`/`xavier_init` use the global `np.random.randn`**, not an injectable RNG,
   so they aren't reproducible independent of global numpy state.
 - **`requires-python` is still `>=3.9`**; 3.9 is EOL.
+- **FrozenLake example never reaches the goal.** `examples/frozen_lake_q_learning.py`
+  ships `epsilon=0.1`, no epsilon decay, 2000 episodes on the slippery 4x4 map.
+  Verified 2026-07-22: 0 of 2000 episodes reach the goal. The example runs without
+  error and illustrates the q-learning update, but would need higher `episodes`,
+  epsilon decay, or `is_slippery=False` before it shows actual learning. The
+  example file now carries an honest note rather than silently using different
+  hyperparameters to make the plot look good. *(examples/frozen_lake_q_learning.py)*
 
 ## Verified fixed (no longer tracked)
 
@@ -41,3 +48,14 @@ sign/masking error. Verified against the textbook clip-gradient rule across 100k
 trajectory (mean relative error 0.8%, max 4.7%, consistent with FD step size). The
 gradient is correct — flagged above only because nothing in the test suite would catch
 a regression here.
+
+## Secondary / deferred (not bugs, tracked for v1.0.0)
+
+- **Examples should be readable notebooks, not scripts.** Currently all 8 examples
+  under `examples/` are `.py` entry points using `logging.basicConfig`. A secondary
+  v1.0.0 goal is to migrate these into simple, readable notebook form so the
+  progressive-complexity story (NN core → tabular RL → deep RL → PPO) is walking
+  through one notebook at a time. This interacts with `RESTRUCTURE.md`'s proposal to
+  group `examples/` into `0X_{nn_core,tabular_rl,deep_rl,ppo}/` phase directories —
+  the directory reorg should land first, then the script-to-notebook conversion
+  inside each phase dir.

@@ -2,6 +2,16 @@
 
 Mathematical equations:
     Q(s,a) ← Q(s,a) + α [ r + γ max_a' Q(s',a') - Q(s,a) ]
+
+Hyperparameters note
+---------------------
+The shipped hyperparameters below (epsilon=0.1, no decay, 2000 episodes) are
+honest but under-powered and the agent never reaches the goal on the slippery
+4x4 map in practice (verified: 0 successes out of 2000 episodes). See BUGS.md
+for the tracking entry. The training loop runs to completion without error and
+illustrates the q-learning update rule; it is intentionally not tuned to make
+the plot look good. To get a learning agent, raise `episodes`, add epsilon
+decay, or set `is_slippery=False`.
 """
 
 import logging
