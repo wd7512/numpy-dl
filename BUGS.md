@@ -20,7 +20,12 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
   only checks the scalar min-of-surrogates formula, not the actual gradient computed in
   `train_step`.
 - **`ReplayBuffer` is list-of-tuples**, not preallocated arrays. Works, but sampling
-  and storage both do more Python-level work than necessary.
+  and storage both do more Python-level work than necessary. FIXED 2026-07-22:
+  rewrote to lazily preallocate one NumPy array per field (`_states`,
+  `_actions`, `_rewards`, `_next_states`, `_dones`), sized to `capacity`. First
+  `push` infers shapes from its arguments; subsequent pushes write in place at
+  `_pos`. Sample becomes a single fancy-index of contiguous arrays. The public
+  API is unchanged. Tests added for empty-sample raise and overwrite shapes.
 - **`_compute_returns()` in `reinforce.py`** is an unvectorized Python loop. (The GAE
   loop in `rl/utils.py` is intentionally sequential and fine as-is.) FIXED
   2026-07-22: replaced with a vectorized `discount @ rewards` matmul, where

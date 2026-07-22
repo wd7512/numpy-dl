@@ -55,3 +55,21 @@ class TestReplayBufferSample:
             buf.push(s, i % 3, float(i), s, False)
         states, _, _, _, _ = buf.sample(20)
         assert len(set(map(tuple, states))) == 20
+
+    def test_sample_empty_buffer_raises(self) -> None:
+        buf = ReplayBuffer(capacity=10)
+        with np.testing.assert_raises(ValueError):
+            buf.sample(1)
+
+    def test_overwrite_preserves_capacity_and_shape(self) -> None:
+        buf = ReplayBuffer(capacity=3)
+        s = np.array([1.0, 2.0, 3.0])
+        for i in range(7):
+            buf.push(s, i % 3, float(i), s, i == 6)
+        states, actions, rewards, next_states, dones = buf.sample(3)
+        assert states.shape == (3, 3)
+        assert actions.shape == (3,)
+        assert rewards.shape == (3,)
+        assert next_states.shape == (3, 3)
+        assert dones.shape == (3,)
+        assert len(buf) == 3
