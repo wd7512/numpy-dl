@@ -135,6 +135,27 @@ class TestPPOTrainStep:
         )
         assert changed
 
+    def test_nan_inf_guard_aborts_training(self) -> None:
+        agent = PPOAgent(state_dim=4, action_dim=2, seed=0, epochs=5, batch_size=4)
+        for _ in range(8):
+            action, _log_prob, value = agent.select_action(np.random.randn(4))
+            agent.store_transition(
+                np.random.randn(4), action, -1e3, 1.0, value, False
+            )
+        weights_before = [p.copy() for p, _ in agent.actor.parameters()]
+        weights_before_critic = [p.copy() for p, _ in agent.critic.parameters()]
+        agent.train_step()
+        weights_after = [p.copy() for p, _ in agent.actor.parameters()]
+        weights_after_critic = [p.copy() for p, _ in agent.critic.parameters()]
+        assert all(
+            np.allclose(wb, wa) for wb, wa in zip(weights_before, weights_after)
+        ), "NaN/inf guard should abort before any weight update"
+        assert all(
+            np.allclose(wb, wa)
+            for wb, wa in zip(weights_before_critic, weights_after_critic)
+        ), "critic weights should also be untouched once guard fires"
+        assert len(agent._rewards) == 0, "trajectory should still be cleared on guard"
+
 
 class TestPPOClippedObjective:
     def test_clipping_reduces_large_update(self) -> None:

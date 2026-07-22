@@ -19,6 +19,8 @@ Mathematical equations:
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 
 from numpy_dl.nn.activations import ReLU, softmax
@@ -26,6 +28,8 @@ from numpy_dl.nn.layers import Dense
 from numpy_dl.nn.sequential import Sequential
 from numpy_dl.optim.adam import Adam
 from numpy_dl.rl.utils import categorical_sample, compute_gae, normalize_advantages
+
+logger = logging.getLogger(__name__)
 
 
 class PPOAgent:
@@ -223,6 +227,19 @@ class PPOAgent:
                 clipped = np.clip(
                     ratio, 1.0 - self.clip_eps, 1.0 + self.clip_eps
                 ) * batch_advantages
+
+                if np.isnan(unclipped).any() or np.isinf(unclipped).any():
+                    logger.warning(
+                        "NaN/inf detected in PPO surrogate (epoch loop); "
+                        "aborting remaining epochs to avoid corrupting weights."
+                    )
+                    self._states.clear()
+                    self._actions.clear()
+                    self._log_probs.clear()
+                    self._rewards.clear()
+                    self._values.clear()
+                    self._dones.clear()
+                    return avg_reward
 
                 one_hot = np.zeros_like(probs)
                 one_hot[np.arange(batch_size_actual), batch_actions] = 1.0

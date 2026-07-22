@@ -5,10 +5,11 @@ Verified against `src/` on 2026-07-22. Supersedes `AUDIT-FIXES.md`, which was st
 
 ## Open
 
-- **PPO has no NaN/inf guard.** `dqn.py` and `reinforce.py` both break their training
-  loop on a NaN/inf loss; `ppo.py` doesn't. PPO's `ratio = exp(new_log_prob -
-  old_log_prob)` can blow up across epochs, and nothing currently stops training if it
-  does. *(rl/ppo.py)*
+- **PPO has no NaN/inf guard.** ~~`dqn.py` and `reinforce.py` both break their training
+  loop on a NaN/inf loss; `ppo.py` doesn't.~~ FIXED 2026-07-22: `train_step` now
+  checks `unclipped` for NaN/inf and aborts remaining epochs/logging, matching the
+  guard pattern in `dqn.py`/`reinforce.py`. Test added: `tests/rl/test_ppo.py::
+  TestPPOTrainStep::test_nan_inf_guard_aborts_training`. *(rl/ppo.py)*
 - **`epsilon_greedy` crashes on empty `q_values`** with an unhelpful numpy error
   instead of a clear one. Untested. *(rl/utils.py)*
 - **No numerical gradient checking anywhere.** Every backward pass is hand-derived and
